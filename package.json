@@ -1,0 +1,12 @@
+{
+  "name": "quarry-sports-bar",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Quarry Sports Bar Saturday competition — static site + serverless backend",
+  "scripts": {
+    "test": "node tests/run-tests.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

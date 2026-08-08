@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quarry — Staff Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root{--paper:#F3F3F3;--white:#fff;--ink:#141414;--muted:#4E4E4E;--amber:#FFB300;
+      --err:#B3261E;--ok:#1E7A47;--r:2px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5;padding-bottom:64px}
+    .wrap{max-width:860px;margin:0 auto;padding:0 16px}
+    header{background:var(--ink);color:var(--paper);padding:12px 0}
+    header .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    h1{font-size:1.1rem}
+    section{margin-top:32px;border-top:2px solid var(--ink);padding-top:16px}
+    h2{font-size:1.15rem;margin-bottom:12px}
+    h2 em{font-style:normal;background:var(--amber);padding:0 8px;margin-right:8px}
+    label{display:block;font-weight:600;font-size:.9rem;margin:12px 0 4px}
+    input,select,textarea{width:100%;max-width:420px;min-height:44px;font:inherit;border:2px solid var(--ink);border-radius:var(--r);padding:8px 12px;background:var(--white)}
+    textarea{min-height:90px}
+    button{font:inherit;font-weight:600;min-height:44px;padding:0 20px;border:2px solid var(--ink);border-radius:var(--r);background:var(--amber);cursor:pointer;margin-top:12px}
+    button.plain{background:var(--white)}
+    button:disabled{opacity:.4;cursor:not-allowed}
+    .out{margin-top:12px;padding:12px;background:var(--white);border:1px solid var(--ink);border-radius:var(--r);
+      font-family:ui-monospace,monospace;font-size:.85rem;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow:auto}
+    .out.ok{border-left:6px solid var(--ok)} .out.err{border-left:6px solid var(--err)}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+    .note{color:var(--muted);font-size:.85rem;margin-top:6px;max-width:60ch}
+    .danger{border-left:6px solid var(--err);padding-left:12px}
+  </style>
+</head>
+<body>
+  <header><div class="wrap">
+    <h1>QUARRY · Staff Admin</h1>
+    <span id="whoami" style="font-size:.85rem">locked</span>
+  </div></header>
+  <div class="wrap">
+
+    <section>
+      <h2><em>0</em>Unlock</h2>
+      <label for="key">Admin key</label>
+      <input id="key" type="password" autocomplete="off">
+      <p class="note">Held by Tolu and the bar manager only. The key stays in this browser tab — it is never saved.</p>
+      <button id="unlock">Unlock</button>
+    </section>
+
+    <section>
+      <h2><em>1</em>This week</h2>
+      <button class="plain" id="load-week">Load current week</button>
+      <div class="out" id="week-out">–</div>
+    </section>
+
+    <section>
+      <h2><em>2</em>Create the week (Thursday)</h2>
+      <div class="row">
+        <div><label for="w-date">Saturday date</label><input id="w-date" type="date"></div>
+        <div><label for="w-kick">First kickoff (local)</label><input id="w-kick" type="time" value="13:30"></div>
+      </div>
+      <label for="w-fixtures">Fixtures — one per line: <code>League | Home | Away | HH:MM | external_id(optional)</code></label>
+      <textarea id="w-fixtures" placeholder="Premier League | Arsenal | Everton | 13:30 | 497555"></textarea>
+      <p class="note">Numbers close 21:00, draw 21:30, min entries 25 — set automatically; adjust in Supabase if ever needed.</p>
+      <button id="create-week">Create week (as teaser)</button>
+      <button class="plain" id="open-week">Open entries</button>
+      <div class="out" id="create-out">–</div>
+    </section>
+
+    <section>
+      <h2><em>3</em>Issue codes (till roll)</h2>
+      <div class="row">
+        <div><label for="c-count">How many</label><input id="c-count" type="number" value="60" min="1" max="500"></div>
+        <button id="issue">Issue codes</button>
+      </div>
+      <p class="note">Print the list and attach codes to receipts as they're sold. Each code works once, this Saturday only.</p>
+      <div class="out" id="codes-out">–</div>
+    </section>
+
+    <section>
+      <h2><em>4</em>Lost receipt lookup</h2>
+      <label for="l-phone">Customer phone</label><input id="l-phone" type="tel">
+      <button id="lookup">Find entry</button>
+      <div class="out" id="lookup-out">–</div>
+    </section>
+
+    <section>
+      <h2><em>5</em>Results fallback</h2>
+      <p class="note">Results normally arrive automatically every 2 minutes. Use this only if the feed fails, or to void a postponed match.</p>
+      <div class="row">
+        <div><label for="r-fixture">Fixture ID</label><input id="r-fixture" type="number"></div>
+        <div><label for="r-result">Result</label>
+          <select id="r-result"><option value="H">Home</option><option value="D">Draw</option><option value="A">Away</option><option value="V">Void</option></select>
+        </div>
+        <button id="set-result">Set</button>
+      </div>
+      <div class="out" id="result-out">–</div>
+    </section>
+
+    <section class="danger">
+      <h2><em>6</em>The draw</h2>
+      <p class="note"><strong>9:00pm sharp:</strong> Commit (publishes the fingerprint — after this, nothing can change the outcome).<br>
+      <strong>9:30pm, on the big screen:</strong> Reveal (shows the 7 numbers + the seed everyone can verify).</p>
+      <button id="commit">9:00 — Commit draw</button>
+      <button id="reveal">9:30 — Reveal draw</button>
+      <div class="out" id="draw-out">–</div>
+    </section>
+
+    <section>
+      <h2><em>7</em>Record winners (after full time)</h2>
+      <div class="row">
+        <div><label for="win-kind">Kind</label>
+          <select id="win-kind"><option value="picks">Match Picks</option><option value="jackpot">Jackpot</option><option value="match6">Match 6</option><option value="match5">Match 5</option></select>
+        </div>
+        <div><label for="win-name">First name</label><input id="win-name"></div>
+        <div><label for="win-amount">Amount (₦)</label><input id="win-amount" type="number" value="100000"></div>
+      </div>
+      <label><input type="checkbox" id="win-consent" style="width:auto;min-height:0"> Photo/name consent given</label>
+      <button id="record">Record winner</button>
+      <div class="out" id="win-out">–</div>
+    </section>
+
+  </div>
+
+<script>
+(function(){
+  'use strict';
+  var API = '/api';
+  var KEY = '';
+  var WEEK = null;
+
+  function $(id){ return document.getElementById(id); }
+  function out(id, data, ok){
+    var el = $(id);
+    el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    el.className = 'out ' + (ok ? 'ok' : 'err');
+  }
+  async function call(action, payload){
+    var res = await fetch(API + '/admin', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'X-Admin-Key': KEY },
+      body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+    });
+    var data = await res.json();
+    if (!res.ok) throw data;
+    return data;
+  }
+  async function getWeek(){
+    var res = await fetch(API + '/week');
+    var data = await res.json();
+    WEEK = data.week;
+    return data;
+  }
+
+  $('unlock').onclick = function(){ KEY = $('key').value.trim(); $('whoami').textContent = KEY ? 'unlocked' : 'locked'; };
+  $('load-week').onclick = async function(){
+    try { out('week-out', await getWeek(), true); } catch(e){ out('week-out', e, false); }
+  };
+  $('create-week').onclick = async function(){
+    try {
+      var date = $('w-date').value;
+      var kick = $('w-kick').value || '13:30';
+      if (!date) return out('create-out', 'Pick the Saturday date first.', false);
+      var lines = $('w-fixtures').value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+      var fixtures = lines.map(function(l){
+        var p = l.split('|').map(function(s){return s.trim();});
+        return { league:p[0], home:p[1], away:p[2],
+                 kickoff_at: date + 'T' + (p[3]||kick) + ':00+01:00',
+                 external_id: p[4] || null };
+      });
+      var data = await call('create_week', {
+        saturday: date,
+        picks_cutoff: date + 'T' + kick + ':00+01:00',
+        numbers_close: date + 'T21:00:00+01:00',
+        draw_time: date + 'T21:30:00+01:00',
+        fixtures: fixtures
+      });
+      out('create-out', data, true);
+    } catch(e){ out('create-out', e, false); }
+  };
+  $('open-week').onclick = async function(){
+    try { await getWeek(); out('create-out', await call('set_state', { week_id: WEEK.id, state:'open' }), true); }
+    catch(e){ out('create-out', e, false); }
+  };
+  $('issue').onclick = async function(){
+    try { await getWeek(); var d = await call('issue_codes', { week_id: WEEK.id, count: Number($('c-count').value) });
+      out('codes-out', d.codes.join('\n'), true);
+    } catch(e){ out('codes-out', e, false); }
+  };
+  $('lookup').onclick = async function(){
+    try { await getWeek(); out('lookup-out', await call('lookup', { week_id: WEEK.id, phone: $('l-phone').value.trim() }), true); }
+    catch(e){ out('lookup-out', e, false); }
+  };
+  $('set-result').onclick = async function(){
+    try { out('result-out', await call('set_result', { fixture_id: Number($('r-fixture').value), result: $('r-result').value }), true); }
+    catch(e){ out('result-out', e, false); }
+  };
+  $('commit').onclick = async function(){
+    try { await getWeek(); out('draw-out', await call('draw_commit', { week_id: WEEK.id }), true); }
+    catch(e){ out('draw-out', e, false); }
+  };
+  $('reveal').onclick = async function(){
+    try { await getWeek(); out('draw-out', await call('draw_reveal', { week_id: WEEK.id }), true); }
+    catch(e){ out('draw-out', e, false); }
+  };
+  $('record').onclick = async function(){
+    try { await getWeek(); out('win-out', await call('record_winner', {
+      week_id: WEEK.id, kind: $('win-kind').value, display_name: $('win-name').value.trim(),
+      amount: Number($('win-amount').value), consent: $('win-consent').checked }), true);
+    } catch(e){ out('win-out', e, false); }
+  };
+})();
+</script>
+</body>
+</html>

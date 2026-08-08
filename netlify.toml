@@ -1,0 +1,16 @@
+# Quarry Sports Bar — Netlify configuration (Phase 2)
+# Site root is the static site; functions live alongside it.
+
+[build]
+  publish = "site"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Poll results every 2 minutes on Saturday afternoons/evenings (UTC).
+# Adjust window to season kickoff times; harmless off-window (function self-skips).
+[functions."results-sync"]
+  schedule = "*/2 11-22 * * 6"

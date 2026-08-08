@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play — This Saturday's card | Quarry Sports Bar</title>
+  <meta name="description" content="This week's fixture card at Quarry Sports Bar, Abeokuta. Enter your code, make your Match Picks and choose your 7 Lucky Numbers before kickoff.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/favicon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="demo-banner">Demo preview — the competition is not yet live. Entries here are <span class="hl">not real</span> until launch.</div>
+
+  <header class="site-header">
+    <div class="wrap bar">
+      <a class="brand" href="index.html" aria-label="Quarry Sports Bar — home">
+        <img src="assets/logo-lockup-ink.png" alt="Quarry Sports Bar" width="220" height="63">
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav id="site-nav" class="site-nav" aria-label="Main">
+        <a href="play.html" aria-current="page">Play</a>
+        <a href="winners.html">Winners</a>
+        <a href="rules.html">Rules</a>
+        <a href="visit.html">Visit</a>
+        <a class="btn btn-primary" href="#code-section">Submit your picks</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="status-bar" role="status">
+    <div class="wrap in">
+      <span class="state"><em class="caps">Entries open</em> Sample Saturday card</span>
+      <span class="clock num">Closes Saturday 13:30 · numbers 21:00</span>
+    </div>
+  </div>
+
+  <main id="main">
+    <div id="play-flow">
+
+      <!-- Code redemption -->
+      <section class="section" id="code-section">
+        <div class="wrap">
+          <p class="sec-label caps"><em>01</em> Your code</p>
+          <h2>Got your code? Let's play.</h2>
+          <p class="lede">It's printed on your receipt from the bar. No account, no card details — just your code and a phone number so we can reach you if you win.</p>
+          <form id="code-form" novalidate>
+            <div class="field">
+              <label for="entry-code">Your entry code</label>
+              <input id="entry-code" name="code" class="code-input" inputmode="text" autocomplete="off"
+                     placeholder="QRY-0000" aria-describedby="code-help code-msg" required>
+              <p class="help" id="code-help">Demo: type QRY followed by any 4 digits, e.g. QRY-7284.</p>
+              <p class="msg" id="code-msg" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label for="first-name">First name</label>
+              <input id="first-name" name="first-name" autocomplete="given-name" placeholder="e.g. Sola" aria-describedby="name-help">
+              <p class="help" id="name-help">Shown on the leaderboard as e.g. "Sola ··291".</p>
+            </div>
+            <div class="field">
+              <label for="phone">Phone number</label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel"
+                     placeholder="0803 000 0000" aria-describedby="phone-help">
+              <p class="help" id="phone-help">Used only to contact you about your entry. <a href="rules.html#terms">Privacy</a></p>
+            </div>
+            <div class="cta-group" style="margin-top:24px">
+              <button class="btn btn-primary btn-lg" type="submit">Start my picks</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Match picks -->
+      <section class="section" id="picks-section" hidden>
+        <div class="wrap">
+          <p class="sec-label caps"><em>02</em> Match Picks</p>
+          <h2>Call every game on the card.</h2>
+          <p class="lede">Home, Draw or Away for each match. Most correct picks wins <span class="hl num">₦100,000</span>. Your picks save as you go.</p>
+          <div id="fixture-list"></div>
+          <div class="field">
+            <label for="tiebreak">Tie-break: total goals across all matches on the card</label>
+            <input id="tiebreak" type="number" inputmode="numeric" min="0" max="99" placeholder="e.g. 27">
+            <p class="help">If two players tie on correct picks, the closest total-goals prediction wins.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 lucky numbers -->
+      <section class="section" id="numbers-section" hidden>
+        <div class="wrap">
+          <p class="sec-label caps"><em>03</em> 7 Lucky Numbers</p>
+          <h2>Pick 7 from 0–49.</h2>
+          <p class="lede">Drawn live at 9:30pm on the big screen. Match 5 — a drink on the house. Match 6 — ₦20,000 credit. Match all 7 — the <span class="hl num">₦100,000</span> jackpot. <span class="muted">[tier values to be confirmed]</span></p>
+          <div class="tray" id="number-tray" aria-live="polite">
+            <div class="slot">·</div><div class="slot">·</div><div class="slot">·</div><div class="slot">·</div>
+            <div class="slot">·</div><div class="slot">·</div><div class="slot">·</div>
+            <span class="muted small" id="tray-count" style="margin-left:8px">0 of 7 chosen</span>
+          </div>
+          <div class="grid50" id="number-grid" aria-label="Choose 7 numbers from 0 to 49"></div>
+          <div class="cta-group" style="margin-top:24px">
+            <button class="btn btn-secondary" type="button" id="surprise-me">Surprise me — fill the rest at random</button>
+            <button class="btn btn-ghost" type="button" id="clear-numbers">Clear all</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Confirmation -->
+      <section class="section" id="confirm-section" hidden>
+        <div class="wrap">
+          <p class="sec-label caps"><em>04</em> Confirmation</p>
+          <h2>You're in for Saturday.</h2>
+          <div class="slip" style="margin-top:24px">
+            <p class="stamp">RECEIVED · DEMO</p>
+            <p class="muted small">Entry reference</p>
+            <p class="ref">QRY-7284</p>
+            <p class="small" id="readback"></p>
+            <p class="small" style="margin-top:12px">Screenshot this. Winners announced tonight: numbers at 9:30pm live on the big screen, picks after the last match.</p>
+          </div>
+          <div class="check">
+            <input type="checkbox" id="whatsapp-optin">
+            <label for="whatsapp-optin">Send my results and next week's card on WhatsApp <span class="muted">[demo only]</span></label>
+          </div>
+          <div class="cta-group" style="margin-top:24px">
+            <a class="btn btn-secondary" href="winners.html">See who won last week</a>
+            <a class="btn btn-ghost" href="visit.html">The draw is live at 9:30 — be in the room</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Saturday night preview -->
+      <section class="section">
+        <div class="wrap">
+          <p class="sec-label caps"><em>05</em> Saturday night</p>
+          <h2>What match day looks like here.</h2>
+          <p class="lede">Once the games kick off, this page becomes the live scoreboard — and at 9:30pm, the lights go down for the draw. Sample data below.</p>
+
+          <div class="scoreboard" style="margin-top:24px">
+            <h3>Live standings <span class="live-badge"><span class="dot"></span>SAMPLE</span></h3>
+            <div class="lrow"><span class="rank num">1</span><span>Tunde ··184</span><span class="pts num">9</span></div>
+            <div class="lrow"><span class="rank num">2</span><span>Blessing ··067</span><span class="pts num">8</span></div>
+            <div class="lrow you"><span class="rank num">3</span><span>Sola ··291<span class="tag">YOU</span></span><span class="pts num">8</span></div>
+            <div class="lrow"><span class="rank num">4</span><span>Emeka ··330</span><span class="pts num">7</span></div>
+            <div class="lrow"><span class="rank num">5</span><span>Kunle ··052</span><span class="pts num">6</span></div>
+          </div>
+
+          <div class="night-panel" style="margin-top:16px">
+            <h3>9:30pm — lights down for the draw</h3>
+            <div class="balls" aria-label="Sample drawn numbers">
+              <div class="ball">4</div><div class="ball">9</div><div class="ball">17</div><div class="ball">23</div>
+              <div class="ball">31</div><div class="ball">40</div><div class="ball">46</div>
+            </div>
+            <p class="muted small" style="margin-top:16px">Drawn live in front of the room, mirrored here the same second. Provably fair — the draw is committed before numbers close. <a href="winners.html#draw" style="color:var(--night-text)">How the draw works</a></p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="progress-rail" id="progress-rail" hidden>
+    <span class="small num" id="rail-text">0 of 11 matches picked · 0 of 7 numbers</span>
+    <button class="btn btn-primary" id="rail-submit" disabled>Review &amp; submit</button>
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="cols">
+        <img src="assets/logo-badge-white.png" alt="" width="140" height="90">
+        <div>
+          <h4>Find us</h4>
+          <ul>
+            <li>[Address to be confirmed], Abeokuta, Ogun State</li>
+            <li>Open [hours to be confirmed]</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Talk to us</h4>
+          <ul>
+            <li><a href="#">WhatsApp [number to be confirmed]</a></li>
+            <li><a href="#">Instagram [handle to be confirmed]</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>The competition</h4>
+          <ul>
+            <li><a href="play.html">Play this Saturday</a></li>
+            <li><a href="winners.html">Winners &amp; results</a></li>
+            <li><a href="rules.html">Rules &amp; terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="legal">
+        <span>18+ only · Play responsibly · One entry per person</span>
+        <span>[Regulatory line pending legal review]</span>
+        <span>© 2026 Quarry Sports Bar</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
