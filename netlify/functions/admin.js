@@ -27,6 +27,10 @@ exports.handler = async (event) => {
   try {
     switch (body.action) {
 
+      case 'ping': {
+        return json(200, { ok: true }); // reached only if the admin key matched
+      }
+
       case 'create_week': {
         const { data: week, error } = await client.from('weeks').insert({
           saturday: body.saturday,

@@ -151,7 +151,18 @@
     return data;
   }
 
-  $('unlock').onclick = function(){ KEY = $('key').value.trim(); $('whoami').textContent = KEY ? 'unlocked' : 'locked'; };
+  $('unlock').onclick = async function(){
+    KEY = $('key').value.trim();
+    if (!KEY) { $('whoami').textContent = 'locked'; return; }
+    $('whoami').textContent = 'checking\u2026';
+    try { await call('ping'); $('whoami').textContent = '\u2713 unlocked \u2014 key verified'; }
+    catch(e){
+      KEY = '';
+      $('whoami').textContent = '\u2717 key rejected';
+      alert === undefined; // no-op
+      var k = $('key'); k.focus();
+    }
+  };
   $('load-week').onclick = async function(){
     try { out('week-out', await getWeek(), true); } catch(e){ out('week-out', e, false); }
   };
