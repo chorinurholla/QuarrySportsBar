@@ -20,14 +20,17 @@ ties, cut-offs, minimum-entries maths.
 Prerequisites: schema run in Supabase, all 4 env vars in Netlify, site deployed.
 No real Saturday needed — you control the card and set results by hand.
 Takes ~20 minutes. Use your phone as the "customer" and your laptop as "staff".
+**Run the rehearsal before 6:30pm** — number entries close at 6:30pm sharp
+(server-enforced), so an evening test will be refused. To test later, nudge
+the week's `numbers_close`/`draw_time` forward in Supabase → weeks table.
 
 1. **Staff (laptop):** open `yoursite.com/admin.html` → enter the admin key → Unlock.
 2. **Create the week:** pick any date a few days ahead, first kickoff a time
    at least an hour from now. Paste 3 test fixtures, e.g.:
    ```
-   Premier League | Test FC | Trial United | 20:00
-   Premier League | Quarry XI | Imperial FC | 20:00
-   La Liga | Rehearsal CF | Practice FC | 21:00
+   Premier League | Test FC | Trial United | 15:00
+   Premier League | Quarry XI | Imperial FC | 15:00
+   La Liga | Rehearsal CF | Practice FC | 16:00
    ```
    (No external IDs → no football API involved; results will be set manually.)
    Click **Create week**, then **Open entries**.

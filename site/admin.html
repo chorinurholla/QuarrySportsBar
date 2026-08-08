@@ -60,7 +60,7 @@
       </div>
       <label for="w-fixtures">Fixtures — one per line: <code>League | Home | Away | HH:MM | external_id(optional)</code></label>
       <textarea id="w-fixtures" placeholder="Premier League | Arsenal | Everton | 13:30 | 497555"></textarea>
-      <p class="note">Numbers close 21:00, draw 21:30, min entries 25 — set automatically; adjust in Supabase if ever needed.</p>
+      <p class="note">Numbers close 18:30, draw 19:00, min entries 25 — set automatically; adjust in Supabase if ever needed.</p>
       <button id="create-week">Create week (as teaser)</button>
       <button class="plain" id="open-week">Open entries</button>
       <div class="out" id="create-out">–</div>
@@ -98,10 +98,10 @@
 
     <section class="danger">
       <h2><em>6</em>The draw</h2>
-      <p class="note"><strong>9:00pm sharp:</strong> Commit (publishes the fingerprint — after this, nothing can change the outcome).<br>
-      <strong>9:30pm, on the big screen:</strong> Reveal (shows the 7 numbers + the seed everyone can verify).</p>
-      <button id="commit">9:00 — Commit draw</button>
-      <button id="reveal">9:30 — Reveal draw</button>
+      <p class="note"><strong>6:30pm sharp:</strong> Commit (publishes the fingerprint — after this, nothing can change the outcome).<br>
+      <strong>7:00pm, on the big screen:</strong> Reveal (shows the 7 numbers + the seed everyone can verify).</p>
+      <button id="commit">6:30 — Commit draw</button>
+      <button id="reveal">7:00 — Reveal draw</button>
       <div class="out" id="draw-out">–</div>
     </section>
 
@@ -181,8 +181,8 @@
       var data = await call('create_week', {
         saturday: date,
         picks_cutoff: date + 'T' + kick + ':00+01:00',
-        numbers_close: date + 'T21:00:00+01:00',
-        draw_time: date + 'T21:30:00+01:00',
+        numbers_close: date + 'T18:30:00+01:00',
+        draw_time: date + 'T19:00:00+01:00',
         fixtures: fixtures
       });
       out('create-out', data, true);

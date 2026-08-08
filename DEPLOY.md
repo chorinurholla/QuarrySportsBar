@@ -42,8 +42,8 @@ Redeploy after setting these.
   "Open entries". Codes: "Issue codes" → print the list for the till.
 - **Saturday:** nothing to do until evening — results and the live/leaderboard
   state update automatically every 2 minutes.
-- **9:00pm:** admin → **Commit draw** (publishes the fingerprint).
-- **9:30pm:** big screen on the Play page → admin → **Reveal draw**.
+- **6:30pm:** admin → **Commit draw** (publishes the fingerprint).
+- **7:00pm:** big screen on the Play page → admin → **Reveal draw**.
 - **After the last match:** admin → record winners (photo consent checkbox),
   pay the same night.
 - **Fallback:** if the results feed fails, set results manually in admin §5.
