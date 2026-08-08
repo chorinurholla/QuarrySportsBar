@@ -309,22 +309,38 @@
     railText.textContent = msg;
   }
 
+  /* No-play states: never leave the page silently empty. */
+  function showNoPlay(unreachable) {
+    var cs = document.getElementById('code-section');
+    cs.hidden = false;
+    var form = document.getElementById('code-form');
+    if (form) form.hidden = true;
+    var h = cs.querySelector('h2');
+    var lede = cs.querySelector('.lede');
+    if (unreachable) {
+      h.textContent = "We can't reach the competition server.";
+      lede.textContent = 'Check your connection and refresh. If this keeps happening at the bar on a Saturday, tell the staff — paper entries apply (see Rules).';
+    } else {
+      h.textContent = 'No card is open right now.';
+      lede.textContent = "The next Saturday card drops on Thursday — check back then, or ask at the bar to get it on WhatsApp the moment it lands.";
+    }
+  }
+
   /* Init: live fixtures if API, sample otherwise */
   (async function init() {
     if (API) {
+      var unreachable = false;
       try {
         var res = await fetch(API + '/week');
+        if (!res.ok) throw new Error('status ' + res.status);
         var data = await res.json();
         if (data.week && data.fixtures && data.fixtures.length) {
           week = data.week;
           fixtures = data.fixtures;
-        } else {
-          fixtures = [];
         }
-      } catch (err) { fixtures = []; }
+      } catch (err) { unreachable = true; }
       if (!fixtures.length) {
-        // No open week: hide entry, leave informational sections.
-        document.getElementById('code-section').hidden = true;
+        showNoPlay(unreachable);
         return;
       }
     } else {
