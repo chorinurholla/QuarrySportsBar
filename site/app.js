@@ -296,7 +296,32 @@
     if (refEl) refEl.textContent = reference;
     var sorted = chosen.slice().sort(function (a, b) { return a - b; });
     document.getElementById('readback').textContent =
-      fixtures.length + ' picks · numbers ' + sorted.join(', ') + ' · submitted before cut-off.';
+      'Numbers: ' + sorted.join(', ') + ' · submitted before cut-off.';
+
+    /* Full picks read-back — one line per match, like the numbers */
+    var PICK_WORD = { H: 'Home', D: 'Draw', A: 'Away' };
+    var pickLines = fixtures.map(function (f) {
+      return f.home + ' vs ' + f.away + ' — ' + (PICK_WORD[picks[f.id]] || '–');
+    });
+    var picksBox = document.getElementById('readback-picks');
+    if (picksBox) {
+      picksBox.innerHTML = '';
+      pickLines.forEach(function (line) {
+        var p = document.createElement('p');
+        p.textContent = line;
+        picksBox.appendChild(p);
+      });
+    }
+
+    /* One-tap: save the whole slip into the customer's WhatsApp (chat with the bar) */
+    var waBtn = document.getElementById('wa-slip');
+    if (waBtn) {
+      var slipText = 'My Quarry Sports Bar entry — ' + reference + '\n'
+        + pickLines.join('\n') + '\n'
+        + 'Lucky numbers: ' + sorted.join(', ');
+      waBtn.href = 'https://wa.me/2349135593111?text=' + encodeURIComponent(slipText);
+      waBtn.hidden = false;
+    }
     var h = confirmSection.querySelector('h2');
     h.setAttribute('tabindex', '-1'); h.focus();
     window.scrollTo({ top: confirmSection.offsetTop - 80, behavior: 'smooth' });
