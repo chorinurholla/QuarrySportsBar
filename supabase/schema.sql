@@ -12,8 +12,8 @@ create table if not exists weeks (
   numbers_close timestamptz not null,          -- 21:00 local
   draw_time     timestamptz not null,          -- 21:30 local
   min_entries   int  not null default 25,
-  pool_full     int  not null default 100000,  -- naira
-  fallback_pct  int  not null default 80,      -- % of entry fees below min_entries
+  pool_full     int  not null default 50000,   -- naira
+  fallback_pct  int  not null default 40,      -- pool = entries × ₦5,000 × 40% = ₦2,000/entry below min_entries
   draw_commit   text,                          -- sha256(seed) published at numbers_close
   draw_seed     text,                          -- revealed at draw time
   drawn_numbers int[],                         -- 7 numbers, drawn order
