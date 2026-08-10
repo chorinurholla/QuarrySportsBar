@@ -10,7 +10,7 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
-# Poll results every 2 minutes on Saturday afternoons/evenings (UTC).
-# Adjust window to season kickoff times; harmless off-window (function self-skips).
+# Poll results every 2 minutes, any day 11:00-22:00 UTC — supports midweek
+# competitions. Harmless when no week is open (function self-skips).
 [functions."results-sync"]
-  schedule = "*/2 11-22 * * 6"
+  schedule = "*/2 11-22 * * *"
