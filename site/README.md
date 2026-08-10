@@ -10,7 +10,7 @@ built to the approved "Matchday Print" design system.
 | `index.html` | Home — value proposition, how it works, both games, visit teaser |
 | `play.html` | Play hub — code redemption → Match Picks → 7 Lucky Numbers → confirmation slip, plus a sample of the live scoreboard and draw night. **Runs in demo mode** (clearly bannered) until the Phase 2 backend is attached |
 | `winners.html` | Results & Winners — pre-launch state, sample weekly-record layout, fair-draw explanation |
-| `rules.html` | Plain-English rules, FAQ, terms placeholder (pending legal review) |
+| `rules.html` | Plain-English rules and FAQ |
 | `visit.html` | Location, Saturday timeline, contact — awaiting venue details |
 | `styles.css` | The complete design system (all tokens per the design-system doc) |
 | `app.js` | Nav, demo entry flow. Backend attachment points marked `// [PHASE2]` |
