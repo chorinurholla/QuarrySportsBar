@@ -74,7 +74,7 @@ Admin **Section 6 → Commit draw.** One click. This publicly seals the draw res
 
 ### 3.5 — 7:00pm: REVEAL the draw (the show)
 
-1. Put the website's Play page on the big screen.
+1. Put **`quarrysportsbar.com/draw.html`** on the big screen (do this any time after 6pm — it shows the countdown and "the draw is sealed", then plays the spinning-ball reveal automatically the moment you press Reveal). The Play page also works, but draw.html is built for the TV.
 2. MC counts down, lights down.
 3. Admin **Section 6 → Reveal draw.** The 7 numbers appear on the site (and the screen) instantly, with the seed anyone can verify on the Winners page.
 4. The output box also lists every tier winner (match 5/6/7) by name and reference — read them out.
