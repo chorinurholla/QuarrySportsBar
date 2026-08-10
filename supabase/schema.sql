@@ -16,7 +16,8 @@ create table if not exists weeks (
   fallback_pct  int  not null default 40,      -- pool = entries × ₦5,000 × 40% = ₦2,000/entry below min_entries
   draw_commit   text,                          -- sha256(seed) published at numbers_close
   draw_seed     text,                          -- revealed at draw time
-  drawn_numbers int[],                         -- 7 numbers, drawn order
+  drawn_numbers int[],                         -- full bingo sequence (permutation of 0-49), drawn order
+  winning_ball  int,                           -- 1-based ball on which the first entry completed all 7
   created_at    timestamptz not null default now()
 );
 
@@ -62,7 +63,7 @@ create index if not exists entries_phone on entries(week_id, phone);
 create table if not exists winners (
   id         bigint generated always as identity primary key,
   week_id    bigint not null references weeks(id) on delete cascade,
-  kind       text not null check (kind in ('picks','jackpot','match6','match5')),
+  kind       text not null check (kind in ('picks','bingo')),
   entry_id   bigint references entries(id),
   display_name text not null,                   -- first name only
   amount     int not null,                      -- naira value (0 for drink voucher)

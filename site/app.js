@@ -44,17 +44,19 @@
           outEl.className = 'notice'; outEl.style.borderLeftColor = 'var(--error)';
           return;
         }
-        var derived = []; var counter = 0;
-        while (derived.length < 7 && counter < 10000) {
-          var h = await sha256Hex(seed + ':' + counter);
-          var n = parseInt(h.slice(0, 8), 16) % 50;
-          if (derived.indexOf(n) === -1) derived.push(n);
-          counter++;
+        // Derive the full bingo drawing sequence — mirrors the server exactly
+        var derived = []; for (var k = 0; k < 50; k++) derived.push(k);
+        var counter = 0;
+        for (var i2 = 49; i2 > 0; i2--) {
+          var h = await sha256Hex(seed + ':' + counter); counter++;
+          var j2 = parseInt(h.slice(0, 8), 16) % (i2 + 1);
+          var tmp = derived[i2]; derived[i2] = derived[j2]; derived[j2] = tmp;
         }
-        var match = derived.length === claimed.length && derived.every(function (n, i) { return n === claimed[i]; });
+        var match = claimed.length > 0 && claimed.length <= 50 &&
+          claimed.every(function (n, i) { return derived[i] === n; });
         outEl.textContent = match
-          ? '✓ VERIFIED — the seed matches the fingerprint published before entries closed, and it derives exactly these 7 numbers: ' + derived.join(', ')
-          : '✗ FAILED — the seed is genuine but derives ' + derived.join(', ') + ', not the numbers entered.';
+          ? '✓ VERIFIED — the seed matches the fingerprint published before entries closed, and it derives exactly this drawing order: ' + derived.slice(0, claimed.length).join(', ')
+          : '✗ FAILED — the seed is genuine but the real drawing order starts ' + derived.slice(0, Math.min(claimed.length || 12, 12)).join(', ') + '…, not the numbers entered.';
         outEl.className = 'notice';
         outEl.style.borderLeftColor = match ? 'var(--success)' : 'var(--error)';
       } catch (err) {
@@ -85,13 +87,14 @@
           var body = document.getElementById('draw-status-body');
           var html = '';
           if (w.drawn_numbers) {
-            html += '<p><strong>Drawn numbers:</strong> <span class="num">' + w.drawn_numbers.join(', ') + '</span></p>';
+            var upto = w.winning_ball || w.drawn_numbers.length;
+            html += '<p><strong>BINGO on ball ' + upto + '.</strong> Drawn order: <span class="num">' + w.drawn_numbers.slice(0, upto).join(', ') + '</span></p>';
             html += '<p style="margin-top:8px"><strong>Fingerprint (published before numbers closed):</strong><br><code style="word-break:break-all">' + w.draw_commit + '</code></p>';
             html += '<p style="margin-top:8px"><strong>Seed (revealed at the draw):</strong><br><code style="word-break:break-all">' + w.draw_seed + '</code></p>';
             html += '<p class="muted" style="margin-top:8px">These values are pre-filled into the checker below — just press &quot;Verify the draw&quot;.</p>';
             var vc = document.getElementById('verify-commit'); if (vc) vc.value = w.draw_commit;
             var vs = document.getElementById('verify-seed'); if (vs) vs.value = w.draw_seed;
-            var vn = document.getElementById('verify-numbers'); if (vn) vn.value = w.drawn_numbers.join(', ');
+            var vn = document.getElementById('verify-numbers'); if (vn) vn.value = w.drawn_numbers.slice(0, w.winning_ball || w.drawn_numbers.length).join(', ');
           } else {
             html += '<p><strong>The draw is committed and sealed.</strong> Numbers revealed at ' + fmtTime(w.draw_time) + ' on the big screen.</p>';
             html += '<p style="margin-top:8px"><strong>Fingerprint:</strong><br><code style="word-break:break-all">' + w.draw_commit + '</code></p>';
@@ -119,12 +122,12 @@
               h += '<p><strong></strong> — Match Picks · won <span class="hl num">₦' + Number(p.amount).toLocaleString('en-NG') + '</span></p>';
             });
             if (!picksW.length) h += '<p class="muted">Match Picks winner recorded at the bar.</p>';
-            h += '<p class="caps" style="margin-top:16px">The 7 drawn numbers</p><div class="numbers-line">' +
-              wk.drawn_numbers.map(function (n) { return '<span class="n7">' + n + '</span>'; }).join('') + '</div>';
+            var upto2 = wk.winning_ball || Math.min(wk.drawn_numbers.length, 50);
+            h += '<p class="caps" style="margin-top:16px">Bingo on ball ' + upto2 + ' — drawn order</p><div class="numbers-line">' +
+              wk.drawn_numbers.slice(0, upto2).map(function (n) { return '<span class="n7">' + n + '</span>'; }).join('') + '</div>';
             if (tiers.length) {
               h += '<p class="muted small" style="margin-top:12px">' + tiers.map(function (t) {
-                var lbl = t.kind === 'jackpot' || t.kind === 'match7' ? 'matched all 7' : t.kind === 'match6' ? 'matched 6' : 'matched 5';
-                return '' + lbl + ' · ₦' + Number(t.amount).toLocaleString('en-NG');
+                return 'BINGO · ₦' + Number(t.amount).toLocaleString('en-NG') + ' credit';
               }).join(' — ') + '</p>';
             }
             art.innerHTML = h;
@@ -494,8 +497,9 @@
     if (lede) lede.textContent = 'Live standings update automatically. At ' + fmtTime(week.draw_time) + ', the lights go down for the draw.';
     if (balls) {
       if (week.drawn_numbers) {
-        balls.innerHTML = week.drawn_numbers.map(function (n) { return '<div class="ball">' + Number(n) + '</div>'; }).join('');
-        if (note) note.innerHTML = 'Drawn live in front of the room. <a href="winners.html#draw" style="color:var(--night-text)">Verify it yourself</a>.';
+        var upto = week.winning_ball || Math.min(week.drawn_numbers.length, 50);
+        balls.innerHTML = week.drawn_numbers.slice(0, upto).map(function (n) { return '<div class="ball">' + Number(n) + '</div>'; }).join('');
+        if (note) note.innerHTML = '<strong>BINGO on ball ' + upto + '!</strong> First slip to complete all 7 wins ₦20,000 credit. <a href="winners.html#draw" style="color:var(--night-text)">Verify it yourself</a>.';
       } else {
         balls.innerHTML = '';
         if (note) note.textContent = week.draw_commit
@@ -579,11 +583,19 @@
         var res = await fetch(API + '/week');
         if (!res.ok) throw new Error('status ' + res.status);
         var data = await res.json();
-        if (data.week && data.fixtures && data.fixtures.length) {
-          week = data.week;
-          fixtures = data.fixtures;
-        }
+        if (data && data.week) week = data.week;
+        if (data && Array.isArray(data.fixtures)) fixtures = data.fixtures;
       } catch (err) { unreachable = true; }
+      if (week) {
+        DRAFT_KEY = 'qsb-draft-' + week.id;
+        updateStatusBar();
+        refreshLive();
+        setInterval(async function () {
+          await refreshWeek();
+          updateStatusBar();
+          refreshLive();
+        }, 90000);
+      }
       if (!fixtures.length) {
         showNoPlay(unreachable);
         return;
@@ -595,15 +607,5 @@
     renderGrid();
     renderTray();
     updateRail();
-    if (API && week) {
-      DRAFT_KEY = 'qsb-draft-' + week.id;
-      updateStatusBar();
-      refreshLive();
-      setInterval(async function () {
-        await refreshWeek();
-        updateStatusBar();
-        refreshLive();
-      }, 90000);
-    }
   })();
 })();

@@ -99,7 +99,7 @@
     <section class="danger">
       <h2><em>6</em>The draw</h2>
       <p class="note"><strong>Before 6:30pm:</strong> open <strong>/draw.html</strong> on the big screen — it shows the countdown, then plays the reveal automatically.<br><strong>6:30pm sharp:</strong> Commit (publishes the fingerprint — after this, nothing can change the outcome).<br>
-      <strong>7:00pm, on the big screen:</strong> Reveal (shows the 7 numbers + the seed everyone can verify).</p>
+      <strong>7:00pm, on the big screen:</strong> Reveal — the bingo show plays on /draw.html and the output box below names the winner(s) and the winning ball.</p>
       <button id="commit">6:30 — Commit draw</button>
       <button id="reveal">7:00 — Reveal draw</button>
       <div class="out" id="draw-out">–</div>
@@ -109,7 +109,7 @@
       <h2><em>7</em>Record winners (after full time)</h2>
       <div class="row">
         <div><label for="win-kind">Kind</label>
-          <select id="win-kind"><option value="picks">Match Picks</option><option value="jackpot">Jackpot</option><option value="match6">Match 6</option><option value="match5">Match 5</option></select>
+          <select id="win-kind"><option value="picks">Match Picks</option><option value="bingo">Bingo (7 Lucky Numbers)</option></select>
         </div>
         <div><label for="win-name">First name</label><input id="win-name"></div>
         <div><label for="win-amount">Amount (₦)</label><input id="win-amount" type="number" value="100000"></div>

@@ -22,7 +22,8 @@ exports.handler = async () => {
         draw_commit: week.draw_commit,
         // Seed is exposed ONLY after reveal (drawn_numbers set)
         draw_seed: week.drawn_numbers ? week.draw_seed : null,
-        drawn_numbers: week.drawn_numbers
+        drawn_numbers: week.drawn_numbers,
+        winning_ball: week.winning_ball
       },
       fixtures
     });

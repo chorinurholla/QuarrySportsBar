@@ -1,8 +1,8 @@
 'use strict';
 /* Unit tests for the pure competition logic. Run: node tests/run-tests.js */
 const assert = require('assert');
-const { makeCommit, deriveNumbers, verify, sha256Hex } = require('../lib/draw');
-const { normalizeCode, validateSubmission, scorePicks, rankEntries, computePool, numberTier } = require('../lib/rules');
+const { makeCommit, deriveSequence, verify, sha256Hex } = require('../lib/draw');
+const { normalizeCode, validateSubmission, scorePicks, rankEntries, computePool, completionBall, bingoWinners } = require('../lib/rules');
 
 let passed = 0, failed = 0;
 function test(name, fn) {
@@ -10,37 +10,39 @@ function test(name, fn) {
   catch (e) { failed++; console.log('  ✗ ' + name + '\n    ' + e.message); }
 }
 
-console.log('draw.js');
+console.log('draw.js — bingo sequence');
 test('commit matches seed hash', () => {
   const { seed, commit } = makeCommit();
   assert.strictEqual(sha256Hex(seed), commit);
 });
-test('derivation is deterministic', () => {
+test('sequence derivation is deterministic', () => {
   const seed = 'ab'.repeat(32);
-  assert.deepStrictEqual(deriveNumbers(seed), deriveNumbers(seed));
+  assert.deepStrictEqual(deriveSequence(seed), deriveSequence(seed));
 });
-test('derives 7 distinct numbers in 0–49', () => {
-  for (let i = 0; i < 200; i++) {
-    const nums = deriveNumbers(makeCommit().seed);
-    assert.strictEqual(nums.length, 7);
-    assert.strictEqual(new Set(nums).size, 7);
-    nums.forEach(n => assert.ok(n >= 0 && n <= 49, 'out of range: ' + n));
+test('sequence is a full permutation of 0–49', () => {
+  for (let i = 0; i < 100; i++) {
+    const seq = deriveSequence(makeCommit().seed);
+    assert.strictEqual(seq.length, 50);
+    assert.strictEqual(new Set(seq).size, 50);
+    seq.forEach(n => assert.ok(n >= 0 && n <= 49, 'out of range: ' + n));
   }
 });
-test('verify accepts honest draw', () => {
+test('verify accepts honest sequence and honest prefix', () => {
   const { seed, commit } = makeCommit();
-  assert.strictEqual(verify(seed, commit, deriveNumbers(seed)).ok, true);
+  const seq = deriveSequence(seed);
+  assert.strictEqual(verify(seed, commit, seq).ok, true);
+  assert.strictEqual(verify(seed, commit, seq.slice(0, 31)).ok, true);
 });
 test('verify rejects wrong seed', () => {
   const { commit } = makeCommit();
   const other = makeCommit().seed;
-  assert.strictEqual(verify(other, commit, deriveNumbers(other)).ok, false);
+  assert.strictEqual(verify(other, commit, deriveSequence(other)).ok, false);
 });
-test('verify rejects tampered numbers', () => {
+test('verify rejects tampered sequence', () => {
   const { seed, commit } = makeCommit();
-  const nums = deriveNumbers(seed).slice();
-  nums[6] = (nums[6] + 1) % 50;
-  assert.strictEqual(verify(seed, commit, nums).ok, false);
+  const seq = deriveSequence(seed).slice(0, 30);
+  const t = seq[29]; seq[29] = seq[28]; seq[28] = t;
+  assert.strictEqual(verify(seed, commit, seq).ok, false);
 });
 
 console.log('rules.js — codes');
@@ -125,17 +127,55 @@ test('exact tie shares the prize', () => {
   assert.strictEqual(winners.length, 2);
 });
 
-console.log('rules.js — pool & tiers');
+console.log('rules.js — pool & bingo');
 test('full pool at threshold, fallback below', () => {
   assert.deepStrictEqual(computePool(week, 25), { pool: 100000, reduced: false });
   assert.deepStrictEqual(computePool(week, 10), { pool: 40000, reduced: true }); // 10×5000×80%
 });
-test('number tiers', () => {
-  const drawn = [1, 2, 3, 4, 5, 6, 7];
-  assert.strictEqual(numberTier([1, 2, 3, 4, 5, 6, 7], drawn), 'jackpot');
-  assert.strictEqual(numberTier([1, 2, 3, 4, 5, 6, 40], drawn), 'match6');
-  assert.strictEqual(numberTier([1, 2, 3, 4, 5, 40, 41], drawn), 'match5');
-  assert.strictEqual(numberTier([1, 2, 3, 4, 40, 41, 42], drawn), null);
+test('completionBall: last of the 7 to appear decides', () => {
+  const seq = Array.from({ length: 50 }, (_, i) => i); // 0,1,2,...,49
+  assert.strictEqual(completionBall([0, 1, 2, 3, 4, 5, 6], seq), 7);
+  assert.strictEqual(completionBall([0, 1, 2, 3, 4, 5, 49], seq), 50);
+  assert.strictEqual(completionBall([43, 44, 45, 46, 47, 48, 49], seq), 50);
+});
+test('bingoWinners: earliest completion wins', () => {
+  const seq = Array.from({ length: 50 }, (_, i) => i);
+  const entries = [
+    { id: 1, numbers: [0, 1, 2, 3, 4, 5, 10] },  // completes ball 11
+    { id: 2, numbers: [0, 1, 2, 3, 4, 5, 6] },   // completes ball 7  ← winner
+    { id: 3, numbers: [40, 41, 42, 43, 44, 45, 46] }
+  ];
+  const r = bingoWinners(entries, seq);
+  assert.strictEqual(r.winningBall, 7);
+  assert.deepStrictEqual(r.winners.map(e => e.id), [2]);
+});
+test('bingoWinners: ties on the same ball share', () => {
+  const seq = Array.from({ length: 50 }, (_, i) => i);
+  const entries = [
+    { id: 1, numbers: [0, 1, 2, 3, 4, 5, 9] },  // ball 10
+    { id: 2, numbers: [2, 3, 4, 5, 6, 7, 9] },  // ball 10
+    { id: 3, numbers: [0, 1, 2, 3, 4, 5, 20] }  // ball 21
+  ];
+  const r = bingoWinners(entries, seq);
+  assert.strictEqual(r.winningBall, 10);
+  assert.deepStrictEqual(r.winners.map(e => e.id).sort(), [1, 2]);
+});
+test('bingoWinners: guaranteed winner with any entries', () => {
+  for (let i = 0; i < 50; i++) {
+    const seq = deriveSequence(makeCommit().seed);
+    const entries = [];
+    for (let k = 0; k < 10; k++) {
+      const nums = [];
+      while (nums.length < 7) {
+        const n = Math.floor(Math.random() * 50);
+        if (!nums.includes(n)) nums.push(n);
+      }
+      entries.push({ id: k, numbers: nums });
+    }
+    const r = bingoWinners(entries, seq);
+    assert.ok(r.winningBall >= 7 && r.winningBall <= 50);
+    assert.ok(r.winners.length >= 1);
+  }
 });
 
 console.log('\n' + passed + ' passed, ' + failed + ' failed');

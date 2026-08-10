@@ -15,7 +15,7 @@
 1. Spend ₦5,000 on food & drinks — your waiter gives you a code.
 2. Pick on your phone — every match on the card, plus 7 lucky numbers.
 3. In before kickoff. Winner announced and paid the same night.
-**Numbers strip:** 7 LUCKY NUMBERS — drawn LIVE 7:00pm. Match 5, 6 or 7 → win up to ₦20,000. (Match 5 · ₦5,000 credit / Match 6 · ₦10,000 credit / Match all 7 · ₦20,000 credit)
+**Numbers strip:** 7 LUCKY NUMBERS — LIVE BINGO DRAW 7:00pm. First to complete all 7 → ₦20,000 bar & kitchen credit. Guaranteed winner every match day; ties share.
 **QR block:** Scan to play · quarrysportsbar.com/play · Ask your waiter for your code
 **Legal line:** 18+ only · One entry per person · Entries close at first kickoff (numbers 6:30pm) · Winners paid same night · Quarry Sports Bar, inside Quarry Imperial Hotel, 52 Quarry Road, Abeokuta
 
@@ -24,7 +24,7 @@ Same message compressed; steps shortened:
 1. Spend ₦5,000 — ask your waiter for your free entry code.
 2. Pick on your phone — your football winners + 7 lucky numbers.
 3. In before kickoff — winner paid ₦50,000 the same night.
-Strip: 7 LUCKY NUMBERS drawn LIVE at 7:00pm — match 5, 6 or all 7 and win up to ₦20,000 in bar & kitchen credit.
+Strip: 7 LUCKY NUMBERS — live BINGO draw at 7:00pm. First to complete all 7 wins ₦20,000 credit. Guaranteed winner every match day.
 
 ## A6 Waiter Card (one per staff member, pocket-sized, two-sided)
 

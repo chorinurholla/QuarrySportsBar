@@ -9,7 +9,7 @@ exports.handler = async () => {
     const client = db();
     const { data: weeks, error } = await client
       .from('weeks')
-      .select('id, saturday, drawn_numbers, state')
+      .select('id, saturday, drawn_numbers, winning_ball, state')
       .not('drawn_numbers', 'is', null)
       .order('saturday', { ascending: false })
       .limit(26);
@@ -27,6 +27,7 @@ exports.handler = async () => {
       saturday: w.saturday,
       state: w.state,
       drawn_numbers: w.drawn_numbers,
+      winning_ball: w.winning_ball,
       winners: (winners || [])
         .filter(x => x.week_id === w.id)
         .map(x => ({

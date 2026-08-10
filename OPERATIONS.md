@@ -25,7 +25,7 @@ The website always shows the **newest-dated** week. Customers can only enter whi
 | Match day, from opening | Waiters hand out codes with ₦5,000+ spends | Waiters |
 | First kickoff | Match picks close (automatic) | Nobody |
 | 6:30pm | Numbers close (automatic) · **Commit draw** | Manager, 1 click |
-| 7:00pm | **Reveal draw** on the big screen | Manager, 1 click |
+| 7:00pm | **Reveal draw** — the bingo show plays on the big screen | Manager, 1 click |
 | After last match | Results land → winner known → pay & record | Manager, 10 min |
 
 ---
@@ -76,8 +76,8 @@ Admin **Section 6 → Commit draw.** One click. This publicly seals the draw res
 
 1. Put **`quarrysportsbar.com/draw.html`** on the big screen (do this any time after 6pm — it shows the countdown and "the draw is sealed", then plays the spinning-ball reveal automatically the moment you press Reveal). The Play page also works, but draw.html is built for the TV.
 2. MC counts down, lights down.
-3. Admin **Section 6 → Reveal draw.** The 7 numbers appear on the site (and the screen) instantly, with the seed anyone can verify on the Winners page.
-4. The output box also lists every tier winner (match 5/6/7) by name and reference — read them out.
+3. Admin **Section 6 → Reveal draw.** The bingo show starts on the screen automatically: numbers drawn one at a time until somebody completes all 7 — a guaranteed winner. The admin output box names the winner(s) and the winning ball immediately (the system decides; the BINGO shout is tradition, not the mechanism).
+4. Ties on the same ball share the ₦20,000. Announce the winner from the output box after the show lands.
 - Reveal is refused before commit, and refused a second time. The draw can never be re-rolled — if someone asks, that's the answer: *the machine won't allow it.*
 
 ### 3.6 After the last whistle — settle (≈10 minutes)
@@ -86,7 +86,7 @@ Admin **Section 6 → Commit draw.** One click. This publicly seals the draw res
 2. The leaderboard's top row is your winner. Ties after the total-goals tie-break share equally — the published rule decides, not you.
 3. **Check the pool:** 25+ entries → full ₦50,000. Fewer → ₦2,000 × entries (e.g. 18 entries = ₦36,000). This is printed in the rules; pay exactly that.
 4. Pay the winner: ₦20,000 cash + ₦30,000 bar & kitchen credit (or the reduced pool split in the same 40/60 spirit). Photograph the moment — ask consent for name/photo first (they can decline the photo and still be paid).
-5. **Section 7 — Record winner** for the picks winner and each numbers-tier winner (match 5 = ₦5,000 credit, match 6 = ₦10,000 credit, match 7 = ₦20,000 credit).
+5. **Section 7 — Record winner** for the picks winner (kind: Match Picks) and the bingo winner(s) (kind: Bingo, ₦20,000 credit — split if tied).
 6. **Section 1 → set state** to `settled` (or leave — creating next week's card supersedes it either way).
 7. Post the winner photo + results on WhatsApp Status. This is the marketing engine — never skip it.
 8. Unclaimed prizes: winner has 14 days, with code + ID. Credit valid 30 days, dine-in only.
@@ -177,4 +177,4 @@ AFTER LAST MATCH:   □ All results in   □ Check pool (25+? else ₦2,000×ent
 
 This document lives in the project folder (`OPERATIONS.md`) and in the Claude project. When anything changes — prize values, times, a new edge case you hit, a better routine — update it the same day, commit, push. If a Saturday teaches you something the manual didn't cover, that lesson belongs in §6.
 
-Current fixed values (change here if they change in the rules): entry = ₦5,000 minimum spend · pool = ₦50,000 (₦20k cash/₦30k credit) · minimum entries 25, fallback ₦2,000×entries · tiers ₦5k/₦10k/₦20k credit · numbers close 6:30pm · draw 7:00pm · claim window 14 days · credit validity 30 days.
+Current fixed values (change here if they change in the rules): entry = ₦5,000 minimum spend · pool = ₦50,000 (₦20k cash/₦30k credit) · minimum entries 25, fallback ₦2,000×entries · bingo prize ₦20,000 credit (guaranteed winner, ties share) · numbers close 6:30pm · draw 7:00pm · claim window 14 days · credit validity 30 days.

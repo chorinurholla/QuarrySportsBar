@@ -12,8 +12,8 @@
  *    record_winner { week_id, kind, entry_id?, display_name, amount, note?, consent }
  */
 const { db, json, requireAdmin } = require('./_shared');
-const { makeCommit, deriveNumbers } = require('../../lib/draw');
-const { numberTier } = require('../../lib/rules');
+const { makeCommit, deriveSequence } = require('../../lib/draw');
+const { bingoWinners } = require('../../lib/rules');
 
 exports.handler = async (event) => {
   const denied = requireAdmin(event);
@@ -104,21 +104,24 @@ exports.handler = async (event) => {
         const { data: w, error } = await client.from('weeks')
           .select('draw_seed, draw_commit, drawn_numbers').eq('id', body.week_id).single();
         if (error) throw error;
-        if (!w.draw_commit) return json(409, { error: 'not_committed', message: 'Commit the draw first (at 9:00pm).' });
+        if (!w.draw_commit) return json(409, { error: 'not_committed', message: 'Commit the draw first (at 6:30pm).' });
         if (w.drawn_numbers) return json(409, { error: 'already_drawn' });
-        const numbers = deriveNumbers(w.draw_seed);
-        const { error: e2 } = await client.from('weeks').update({ drawn_numbers: numbers }).eq('id', body.week_id);
-        if (e2) throw e2;
-        // Tier winners
+        const sequence = deriveSequence(w.draw_seed);
+        // Bingo winner(s): first entry to complete all 7; ties share
         const { data: entries, error: e3 } = await client.from('entries')
           .select('id, reference, first_name, numbers').eq('week_id', body.week_id);
         if (e3) throw e3;
-        const tiers = { jackpot: [], match6: [], match5: [] };
-        for (const e of entries) {
-          const t = numberTier(e.numbers, numbers);
-          if (t) tiers[t].push({ id: e.id, reference: e.reference, first_name: e.first_name });
-        }
-        return json(200, { ok: true, numbers, seed: w.draw_seed, commit: w.draw_commit, tiers });
+        const result = bingoWinners(entries || [], sequence);
+        const { error: e2 } = await client.from('weeks')
+          .update({ drawn_numbers: sequence, winning_ball: result.winningBall }).eq('id', body.week_id);
+        if (e2) throw e2;
+        return json(200, {
+          ok: true,
+          winningBall: result.winningBall,
+          winners: result.winners.map(e => ({ id: e.id, reference: e.reference, first_name: e.first_name })),
+          drawnToBingo: result.winningBall ? sequence.slice(0, result.winningBall) : sequence,
+          seed: w.draw_seed, commit: w.draw_commit
+        });
       }
 
       case 'record_winner': {

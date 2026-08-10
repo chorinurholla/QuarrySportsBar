@@ -20,13 +20,21 @@
   h1{font-size:6.5vmin;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
   h1 em{font-style:normal;color:var(--amber)}
   .sub{color:var(--muted);font-size:2.6vmin;margin-top:1vmin;font-weight:500}
-  .balls{display:flex;gap:2.2vmin;justify-content:center;flex-wrap:wrap;margin:5vmin 0}
-  .ball{width:14vmin;height:14vmin;border-radius:999px;display:grid;place-items:center;
-        font-size:6vmin;font-weight:700;font-variant-numeric:tabular-nums;
-        border:.5vmin dashed var(--border);color:var(--muted);
-        transition:transform .18s ease-out}
-  .ball.spinning{border:.5vmin solid var(--border);color:var(--text);background:var(--surface)}
-  .ball.locked{border:none;background:var(--amber);color:var(--night);transform:scale(1.08)}
+  .stage{display:flex;gap:5vmin;align-items:center;justify-content:center;margin:4vmin 0;width:100%}
+  .bigball{width:22vmin;height:22vmin;border-radius:999px;display:grid;place-items:center;flex:none;
+        font-size:10vmin;font-weight:700;font-variant-numeric:tabular-nums;
+        border:.7vmin dashed var(--border);color:var(--muted);transition:transform .15s ease-out}
+  .bigball.spinning{border:.7vmin solid var(--border);color:var(--text);background:var(--surface)}
+  .bigball.locked{border:none;background:var(--amber);color:var(--night);transform:scale(1.06)}
+  .bigball.bingo{background:var(--amber);color:var(--night);border:none;
+        animation:pulse 0.7s ease-in-out infinite alternate}
+  @keyframes pulse{from{transform:scale(1.02)}to{transform:scale(1.14)}}
+  .board{display:flex;flex-wrap:wrap;gap:1.1vmin;justify-content:flex-start;align-content:flex-start;
+        max-width:60vmin;min-height:22vmin}
+  .chip{width:5.6vmin;height:5.6vmin;border-radius:999px;background:var(--surface);
+        border:.3vmin solid var(--border);color:var(--text);display:grid;place-items:center;
+        font-size:2.6vmin;font-weight:600;font-variant-numeric:tabular-nums}
+  .chip.latest{background:var(--amber);color:var(--night);border-color:var(--amber)}
   .status{font-size:3vmin;font-weight:600;min-height:4vmin}
   .status .amber{color:var(--amber)}
   .count{font-size:9vmin;font-weight:700;font-variant-numeric:tabular-nums;color:var(--amber);margin-top:1vmin}
@@ -47,21 +55,21 @@
   <img class="logo" src="assets/logo-badge-white.png" alt="Quarry Sports Bar">
   <div class="demo-tag" id="demo-tag">DEMO</div>
 
-  <h1>7 <em>Lucky</em> Numbers</h1>
-  <p class="sub" id="sub">Live at Quarry Sports Bar</p>
+  <h1>7 <em>Lucky</em> Numbers <span style="font-size:.6em;color:var(--muted)">· BINGO</span></h1>
+  <p class="sub" id="sub">First to complete all 7 wins ₦20,000 credit — guaranteed winner</p>
 
-  <div class="balls" id="balls">
-    <div class="ball">·</div><div class="ball">·</div><div class="ball">·</div><div class="ball">·</div>
-    <div class="ball">·</div><div class="ball">·</div><div class="ball">·</div>
+  <div class="stage">
+    <div class="bigball" id="bigball">·</div>
+    <div class="board" id="board" aria-label="Numbers drawn so far"></div>
   </div>
 
   <p class="status" id="status">Loading…</p>
   <div class="count" id="count" hidden></div>
 
   <div class="tiers" id="tiers">
-    <span>Match 5 · <b>₦5,000</b> credit</span>
-    <span>Match 6 · <b>₦10,000</b> credit</span>
-    <span>Match all 7 · <b>₦20,000</b> credit</span>
+    <span>Ball <b id="ballno">–</b> of the draw</span>
+    <span>BINGO wins <b>₦20,000</b> bar &amp; kitchen credit</span>
+    <span>Ties on the same ball <b>share</b></span>
   </div>
 
   <p class="seal" id="seal"></p>
@@ -76,76 +84,93 @@
   var API = window.QUARRY_API || null;
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var ballEls = Array.prototype.slice.call(document.querySelectorAll('#balls .ball'));
+  var bigEl = document.getElementById('bigball');
+  var boardEl = document.getElementById('board');
   var statusEl = document.getElementById('status');
   var countEl = document.getElementById('count');
   var sealEl = document.getElementById('seal');
   var tiersEl = document.getElementById('tiers');
+  var ballnoEl = document.getElementById('ballno');
   var subEl = document.getElementById('sub');
 
   var week = null;
-  var shown = false;   // show already played
-  var showing = false; // show in progress
+  var shown = false;
+  var showing = false;
 
   function fmtTime(iso) {
     try { return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
     catch (e) { return ''; }
   }
 
-  /* ---------- The show ---------- */
-  function runShow(numbers, isDemo) {
+  function addChip(n, latest) {
+    var prev = boardEl.querySelector('.chip.latest');
+    if (prev) prev.classList.remove('latest');
+    var c = document.createElement('div');
+    c.className = 'chip' + (latest ? ' latest' : '');
+    c.textContent = n;
+    boardEl.appendChild(c);
+  }
+
+  /* ---------- The bingo show ---------- */
+  function runShow(sequence, winningBall, isDemo) {
     if (showing || shown) return;
     showing = true;
     countEl.hidden = true;
-    statusEl.innerHTML = 'Here we <span class="amber">go</span>…';
+    boardEl.innerHTML = '';
+    tiersEl.classList.add('show');
+    statusEl.innerHTML = 'Check your slips — here we <span class="amber">go</span>…';
+    var upto = winningBall || sequence.length;
+
     if (REDUCED) {
-      ballEls.forEach(function (b, i) { b.textContent = numbers[i]; b.className = 'ball locked'; });
-      finishShow(isDemo);
+      for (var r = 0; r < upto; r++) addChip(sequence[r], r === upto - 1);
+      finishShow(sequence, upto, isDemo);
       return;
     }
     var i = 0;
-    function spinNext() {
-      if (i >= 7) { finishShow(isDemo); return; }
-      var ball = ballEls[i];
-      ball.className = 'ball spinning';
+    function nextBall() {
+      if (i >= upto) { finishShow(sequence, upto, isDemo); return; }
+      ballnoEl.textContent = (i + 1);
+      bigEl.className = 'bigball spinning';
       var t = 0;
       var iv = setInterval(function () {
-        ball.textContent = Math.floor(Math.random() * 50);
-        t += 60;
-        if (t >= 1800) {
+        bigEl.textContent = Math.floor(Math.random() * 50);
+        t += 55;
+        if (t >= (i < 5 ? 1400 : 900)) {   // slightly quicker after the first few
           clearInterval(iv);
-          ball.textContent = numbers[i];
-          ball.className = 'ball locked';
+          bigEl.textContent = sequence[i];
+          bigEl.className = 'bigball locked';
+          addChip(sequence[i], true);
           i++;
-          setTimeout(spinNext, 450);
+          setTimeout(nextBall, i >= upto ? 700 : 650);
         }
-      }, 60);
+      }, 55);
     }
-    spinNext();
+    nextBall();
   }
 
-  function finishShow(isDemo) {
+  function finishShow(sequence, upto, isDemo) {
     showing = false; shown = true;
+    bigEl.textContent = sequence[upto - 1];
+    bigEl.className = 'bigball bingo';
+    ballnoEl.textContent = upto;
     statusEl.innerHTML = isDemo
-      ? 'Demo only — no real numbers were drawn.'
-      : 'Tonight\'s numbers — <span class="amber">match 5, 6 or 7 to win!</span>';
-    tiersEl.classList.add('show');
+      ? '<span class="amber">BINGO on ball ' + upto + '!</span> Demo only — no real draw happened.'
+      : '<span class="amber">BINGO on ball ' + upto + '!</span> Completed all 7? Bring your slip to the bar!';
     if (!isDemo && week && week.draw_seed) {
-      sealEl.innerHTML = 'Seed: <code>' + week.draw_seed + '</code> — check it against the fingerprint on the Winners page.';
+      sealEl.innerHTML = 'Seed: <code>' + week.draw_seed + '</code> — verify the whole drawing order on the Winners page.';
     }
   }
 
   /* ---------- Waiting states (live) ---------- */
   function renderWaiting() {
     if (!week) { statusEl.textContent = 'No draw scheduled today.'; return; }
-    subEl.textContent = 'Live at Quarry Sports Bar — draw at ' + fmtTime(week.draw_time);
+    subEl.textContent = 'First to complete all 7 wins ₦20,000 credit — draw at ' + fmtTime(week.draw_time);
     if (week.draw_commit) {
-      statusEl.innerHTML = 'The draw is <span class="amber">sealed</span>. Nobody can change it — not even us.';
+      statusEl.innerHTML = 'The entire drawing order is <span class="amber">sealed</span>. Nobody can change it — not even us.';
       sealEl.innerHTML = 'Fingerprint: <code>' + week.draw_commit + '</code>';
     } else {
       statusEl.textContent = 'Numbers close at ' + fmtTime(week.numbers_close) + '.';
     }
-    // countdown to draw time
     var target = new Date(week.draw_time).getTime();
     var remain = target - Date.now();
     if (remain > 0 && remain < 24 * 3600 * 1000) {
@@ -164,7 +189,7 @@
       week = data && data.week;
     } catch (e) { /* keep last known */ }
     if (week && week.drawn_numbers && !shown && !showing) {
-      runShow(week.drawn_numbers, false);
+      runShow(week.drawn_numbers, week.winning_ball, false);
     } else if (!shown && !showing) {
       renderWaiting();
     }
@@ -175,23 +200,25 @@
     setInterval(poll, 5000);
     setInterval(function () { if (!shown && !showing) renderWaiting(); }, 1000);
   } else {
-    // Demo mode (opened from disk): button-triggered fake draw, clearly labelled
     document.getElementById('demo-tag').style.display = 'block';
     var btn = document.getElementById('demo-btn');
     btn.hidden = false;
     statusEl.textContent = 'Demo mode — the real draw only ever comes from the server.';
     btn.addEventListener('click', function () {
       shown = false;
-      ballEls.forEach(function (b) { b.textContent = '·'; b.className = 'ball'; });
-      tiersEl.classList.remove('show');
-      var nums = [];
-      while (nums.length < 7) {
-        var n = Math.floor(Math.random() * 50);
-        if (nums.indexOf(n) === -1) nums.push(n);
+      boardEl.innerHTML = '';
+      bigEl.textContent = '·'; bigEl.className = 'bigball';
+      // demo: shuffle 0-49, stop at a realistic bingo ball
+      var seq = [];
+      for (var k = 0; k < 50; k++) seq.push(k);
+      for (var i = 49; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = seq[i]; seq[i] = seq[j]; seq[j] = t;
       }
+      var wb = 24 + Math.floor(Math.random() * 12); // ball 24-35
       btn.hidden = true;
-      runShow(nums, true);
-      setTimeout(function () { btn.hidden = false; }, 20000);
+      runShow(seq, wb, true);
+      setTimeout(function () { btn.hidden = false; }, 45000);
     });
   }
 })();
