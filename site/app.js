@@ -63,6 +63,87 @@
     });
   }
 
+  /* ---------- Shared live helpers ---------- */
+  function fmtTime(iso) {
+    try { return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
+    catch (e) { return ''; }
+  }
+  function fmtDay(dateStr) {
+    try { return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long' }); }
+    catch (e) { return ''; }
+  }
+
+  /* ---------- Winners page: live draw status + archive ---------- */
+  var drawStatusBox = document.getElementById('draw-status');
+  if (API && drawStatusBox) {
+    (async function winnersLive() {
+      try {
+        var res = await fetch(API + '/week');
+        var data = await res.json();
+        var w = data && data.week;
+        if (w && (w.draw_commit || w.drawn_numbers)) {
+          var body = document.getElementById('draw-status-body');
+          var html = '';
+          if (w.drawn_numbers) {
+            html += '<p><strong>Drawn numbers:</strong> <span class="num">' + w.drawn_numbers.join(', ') + '</span></p>';
+            html += '<p style="margin-top:8px"><strong>Fingerprint (published before numbers closed):</strong><br><code style="word-break:break-all">' + w.draw_commit + '</code></p>';
+            html += '<p style="margin-top:8px"><strong>Seed (revealed at the draw):</strong><br><code style="word-break:break-all">' + w.draw_seed + '</code></p>';
+            html += '<p class="muted" style="margin-top:8px">These values are pre-filled into the checker below — just press &quot;Verify the draw&quot;.</p>';
+            var vc = document.getElementById('verify-commit'); if (vc) vc.value = w.draw_commit;
+            var vs = document.getElementById('verify-seed'); if (vs) vs.value = w.draw_seed;
+            var vn = document.getElementById('verify-numbers'); if (vn) vn.value = w.drawn_numbers.join(', ');
+          } else {
+            html += '<p><strong>The draw is committed and sealed.</strong> Numbers revealed at ' + fmtTime(w.draw_time) + ' on the big screen.</p>';
+            html += '<p style="margin-top:8px"><strong>Fingerprint:</strong><br><code style="word-break:break-all">' + w.draw_commit + '</code></p>';
+          }
+          body.innerHTML = html;
+          drawStatusBox.hidden = false;
+        }
+      } catch (e) { /* stay hidden */ }
+      try {
+        var res2 = await fetch(API + '/winners');
+        var arch = await res2.json();
+        if (arch && arch.weeks && arch.weeks.length) {
+          var live = document.getElementById('archive-live');
+          var sample = document.getElementById('archive-sample');
+          var total = 0, count = arch.weeks.length;
+          live.innerHTML = '';
+          arch.weeks.forEach(function (wk) {
+            var art = document.createElement('article');
+            art.className = 'week-entry';
+            var picksW = wk.winners.filter(function (x) { return x.kind === 'picks'; });
+            var tiers = wk.winners.filter(function (x) { return x.kind !== 'picks'; });
+            wk.winners.forEach(function (x) { total += (x.amount || 0); });
+            var h = '<header><h3 class="num">' + fmtDay(wk.saturday) + ' ' + wk.saturday + '</h3></header>';
+            picksW.forEach(function (p) {
+              h += '<p><strong></strong> — Match Picks · won <span class="hl num">₦' + Number(p.amount).toLocaleString('en-NG') + '</span></p>';
+            });
+            if (!picksW.length) h += '<p class="muted">Match Picks winner recorded at the bar.</p>';
+            h += '<p class="caps" style="margin-top:16px">The 7 drawn numbers</p><div class="numbers-line">' +
+              wk.drawn_numbers.map(function (n) { return '<span class="n7">' + n + '</span>'; }).join('') + '</div>';
+            if (tiers.length) {
+              h += '<p class="muted small" style="margin-top:12px">' + tiers.map(function (t) {
+                var lbl = t.kind === 'jackpot' || t.kind === 'match7' ? 'matched all 7' : t.kind === 'match6' ? 'matched 6' : 'matched 5';
+                return '' + lbl + ' · ₦' + Number(t.amount).toLocaleString('en-NG');
+              }).join(' — ') + '</p>';
+            }
+            art.innerHTML = h;
+            // names inserted via textContent to stay XSS-safe
+            var strongs = art.querySelectorAll('p strong');
+            picksW.forEach(function (p, i) { if (strongs[i]) strongs[i].textContent = p.display_name; });
+            live.appendChild(art);
+          });
+          if (sample) sample.hidden = true;
+          live.hidden = false;
+          var pt = document.getElementById('paid-total');
+          var pl = document.getElementById('paid-label');
+          if (pt && total > 0) pt.textContent = '₦' + total.toLocaleString('en-NG');
+          if (pl && total > 0) pl.textContent = 'paid out across ' + count + ' match day' + (count === 1 ? '' : 's');
+        }
+      } catch (e) { /* keep sample layout */ }
+    })();
+  }
+
   /* ---------- Play page ---------- */
   var playRoot = document.getElementById('play-flow');
   if (!playRoot) return;
@@ -108,13 +189,21 @@
     fixtureList.innerHTML = '';
     var league = '';
     var frag = document.createDocumentFragment();
+    // Day label follows the real match day (works for midweek cards too)
+    var dayLabel = 'Saturday';
+    if (week && week.saturday) {
+      try {
+        dayLabel = new Date(week.saturday + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long' });
+      } catch (e) { /* keep default */ }
+    }
     fixtures.forEach(function (f) {
       if (f.league !== league) {
         league = f.league;
         var head = document.createElement('div');
         head.className = 'league-head';
-        head.innerHTML = '<span class="caps"></span><span class="muted small num">Saturday</span>';
+        head.innerHTML = '<span class="caps"></span><span class="muted small num"></span>';
         head.firstChild.textContent = league;
+        head.lastChild.textContent = dayLabel;
         frag.appendChild(head);
       }
       var row = document.createElement('div');
@@ -157,6 +246,7 @@
     btn.setAttribute('aria-checked', 'true');
     picks[row.dataset.id] = btn.dataset.pick;
     updateRail();
+    saveDraft();
   });
 
   /* Number grid */
@@ -190,6 +280,7 @@
       return;
     }
     renderTray();
+    saveDraft();
   });
   document.getElementById('surprise-me').addEventListener('click', function () {
     while (chosen.length < 7) {
@@ -200,11 +291,13 @@
       }
     }
     renderTray();
+    saveDraft();
   });
   document.getElementById('clear-numbers').addEventListener('click', function () {
     chosen.length = 0;
     grid.querySelectorAll('button[data-n]').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
     renderTray();
+    saveDraft();
   });
 
   function showError(message) {
@@ -217,6 +310,11 @@
     numbersSection.hidden = false;
     rail.hidden = false;
     document.getElementById('code-section').hidden = true;
+    restoreDraft();
+    var tb = document.getElementById('tiebreak');
+    if (tb) tb.addEventListener('input', saveDraft);
+    var fn = document.getElementById('first-name');
+    if (fn) fn.addEventListener('input', saveDraft);
     var h = picksSection.querySelector('h2');
     h.setAttribute('tabindex', '-1'); h.focus();
   }
@@ -288,6 +386,7 @@
         return;
       }
     }
+    clearDraft();
     picksSection.hidden = true;
     numbersSection.hidden = true;
     rail.hidden = true;
@@ -335,6 +434,127 @@
   }
 
   /* No-play states: never leave the page silently empty. */
+  /* ---------- Live mode: status bar, leaderboard, draw panel ---------- */
+  var STATE_LABEL = { teaser: 'Card published', open: 'Entries open', live: 'Matches live', results: 'Results are in', settled: 'Match day complete', void: 'Match day void' };
+  function updateStatusBar() {
+    if (!week) return;
+    var st = document.getElementById('status-state');
+    var ck = document.getElementById('status-clock');
+    if (st) {
+      st.innerHTML = '<em class="caps"></em> ';
+      st.querySelector('em').textContent = STATE_LABEL[week.state] || week.state;
+      st.appendChild(document.createTextNode(fmtDay(week.saturday) + ' card'));
+    }
+    if (ck) {
+      ck.textContent = week.drawn_numbers
+        ? 'Draw complete — results below'
+        : 'Closes ' + fmtDay(week.saturday) + ' ' + fmtTime(week.picks_cutoff) + ' · numbers ' + fmtTime(week.numbers_close);
+    }
+  }
+  async function refreshWeek() {
+    try {
+      var res = await fetch(API + '/week');
+      var data = await res.json();
+      if (data && data.week) week = data.week;
+    } catch (e) { /* keep last known */ }
+  }
+  async function refreshLive() {
+    if (!API || !week) return;
+    try {
+      var res = await fetch(API + '/leaderboard');
+      var data = await res.json();
+      var box = document.getElementById('board-rows');
+      var badge = document.getElementById('board-badge');
+      if (box && data && data.rows) {
+        if (badge) badge.textContent = 'LIVE';
+        box.innerHTML = '';
+        if (!data.rows.length) {
+          var p = document.createElement('p');
+          p.className = 'muted small';
+          p.textContent = 'No entries on the board yet — be the first.';
+          box.appendChild(p);
+        } else {
+          data.rows.forEach(function (r, i) {
+            var d = document.createElement('div');
+            d.className = 'lrow';
+            d.innerHTML = '<span class="rank num"></span><span></span><span class="pts num"></span>';
+            d.children[0].textContent = i + 1;
+            d.children[1].textContent = r.display;
+            d.children[2].textContent = r.correct;
+            box.appendChild(d);
+          });
+        }
+      }
+    } catch (e) { /* keep current board */ }
+    var balls = document.getElementById('draw-balls');
+    var note = document.getElementById('draw-note');
+    var title = document.getElementById('draw-title');
+    var lede = document.getElementById('live-lede');
+    if (title && fmtTime(week.draw_time)) title.textContent = fmtTime(week.draw_time) + ' — lights down for the draw';
+    if (lede) lede.textContent = 'Live standings update automatically. At ' + fmtTime(week.draw_time) + ', the lights go down for the draw.';
+    if (balls) {
+      if (week.drawn_numbers) {
+        balls.innerHTML = week.drawn_numbers.map(function (n) { return '<div class="ball">' + Number(n) + '</div>'; }).join('');
+        if (note) note.innerHTML = 'Drawn live in front of the room. <a href="winners.html#draw" style="color:var(--night-text)">Verify it yourself</a>.';
+      } else {
+        balls.innerHTML = '';
+        if (note) note.textContent = week.draw_commit
+          ? 'The draw is committed and sealed — numbers revealed at ' + fmtTime(week.draw_time) + ' on the big screen.'
+          : 'Numbers close at ' + fmtTime(week.numbers_close) + '; drawn live at ' + fmtTime(week.draw_time) + ' on the big screen.';
+      }
+    }
+  }
+
+  /* ---------- Draft autosave (live mode): picks survive a refresh ---------- */
+  var DRAFT_KEY = null;
+  function saveDraft() {
+    if (!DRAFT_KEY) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        picks: picks,
+        chosen: chosen,
+        tiebreak: (document.getElementById('tiebreak') || {}).value || '',
+        first_name: (document.getElementById('first-name') || {}).value || ''
+      }));
+    } catch (e) { /* private mode etc. */ }
+  }
+  function clearDraft() {
+    if (!DRAFT_KEY) return;
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  }
+  function restoreDraft() {
+    if (!DRAFT_KEY) return;
+    try {
+      var raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      if (d.picks) Object.keys(d.picks).forEach(function (id) {
+        var row = fixtureList.querySelector('.fixture[data-id="' + id + '"]');
+        if (!row) return;
+        var btn = row.querySelector('button[data-pick="' + d.picks[id] + '"]');
+        if (btn) {
+          row.querySelectorAll('button[data-pick]').forEach(function (b) { b.setAttribute('aria-checked', 'false'); });
+          btn.setAttribute('aria-checked', 'true');
+          picks[id] = d.picks[id];
+        }
+      });
+      if (Array.isArray(d.chosen)) d.chosen.forEach(function (n) {
+        n = Number(n);
+        if (chosen.length < 7 && chosen.indexOf(n) === -1 && n >= 0 && n <= 49) {
+          chosen.push(n);
+          var b = grid.querySelector('button[data-n="' + n + '"]');
+          if (b) b.setAttribute('aria-pressed', 'true');
+        }
+      });
+      var tb = document.getElementById('tiebreak');
+      if (d.tiebreak && tb && !tb.value) tb.value = d.tiebreak;
+      var fn = document.getElementById('first-name');
+      if (d.first_name && fn && !fn.value) fn.value = d.first_name;
+      renderTray();
+      updateRail();
+    } catch (e) { /* corrupt draft: ignore */ }
+  }
+
   function showNoPlay(unreachable) {
     var cs = document.getElementById('code-section');
     cs.hidden = false;
@@ -375,5 +595,15 @@
     renderGrid();
     renderTray();
     updateRail();
+    if (API && week) {
+      DRAFT_KEY = 'qsb-draft-' + week.id;
+      updateStatusBar();
+      refreshLive();
+      setInterval(async function () {
+        await refreshWeek();
+        updateStatusBar();
+        refreshLive();
+      }, 90000);
+    }
   })();
 })();

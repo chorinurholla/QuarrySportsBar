@@ -38,7 +38,7 @@
       <h1>Every winner. Every week. <span class="marker">In public.</span></h1>
       <p class="sub" style="margin-top:16px">Every Saturday, somebody in this bar walks out with the Match Picks prize — drawn from a published card, scored in the open, paid the same night. This page is the permanent record.</p>
       <div class="stat-grid" style="margin-top:32px">
-        <div class="stat"><span class="n marker num">₦0</span><p class="l">paid out so far — first winner crowned on launch night [date to be announced]</p></div>
+        <div class="stat"><span class="n marker num" id="paid-total">₦0</span><p class="l" id="paid-label">paid out so far — first winner crowned on launch night [date to be announced]</p></div>
       </div>
     </section>
 
@@ -48,7 +48,8 @@
         <h2>How each Saturday will be recorded.</h2>
         <p class="lede">The competition hasn't launched yet, so the record below is a <strong>sample layout</strong> — it shows exactly what gets published each week from launch night onward. Nothing here is a real result.</p>
 
-        <article class="week-entry" aria-label="Sample week record">
+        <div id="archive-live" hidden></div>
+        <article class="week-entry" id="archive-sample" aria-label="Sample week record">
           <header>
             <h3 class="num">Saturday [date] — <span class="badge">SAMPLE LAYOUT</span></h3>
             <span class="muted small num">[n] entries</span>
@@ -79,6 +80,8 @@
           <p>What that means in plain terms: <span class="hl">the bar cannot change the numbers after seeing your entries</span> — and you can verify it yourself, every week, from your own phone.</p>
           <p class="muted">[A short video of a real draw will appear here after launch night.]</p>
         </div>
+
+        <div class="card extract" id="draw-status" hidden style="margin-top:24px"><p class="caps">This match day's draw</p><div id="draw-status-body" class="small" style="margin-top:8px"></div></div>
 
         <h3 style="margin-top:32px; font-size:var(--h3); font-weight:600">Check a draw yourself</h3>
         <form id="verify-form" style="margin-top:8px">
