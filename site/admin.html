@@ -58,7 +58,7 @@
         <div><label for="w-date">Match day date (any day — Saturday or midweek)</label><input id="w-date" type="date"></div>
         <div><label for="w-kick">First kickoff (local)</label><input id="w-kick" type="time" value="13:30"></div>
       </div>
-      <label for="w-fixtures">Fixtures — one per line: <code>League | Home | Away | HH:MM | external_id(optional)</code></label>
+      <label for="w-fixtures">Fixtures — one per line: <code>League | Home | Away | time | external_id(optional)</code> — time can be 24h or 12h, e.g. <code>13:30</code> or <code>1:30pm</code></label>
       <textarea id="w-fixtures" placeholder="Premier League | Arsenal | Everton | 13:30 | 497555"></textarea>
       <p class="note">Numbers close 18:30, draw 19:00, min entries 25 — set automatically; adjust in Supabase if ever needed.</p>
       <button id="create-week">Create week (as teaser)</button>
@@ -166,18 +166,37 @@
   $('load-week').onclick = async function(){
     try { out('week-out', await getWeek(), true); } catch(e){ out('week-out', e, false); }
   };
+  // Accepts "13:30", "1:30pm", "1:30 PM", "7pm", "19.00" — returns 24h "HH:MM" or null.
+  function normTime(t){
+    if (!t) return null;
+    var m = String(t).trim().toLowerCase().replace('.', ':').match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+    if (!m) return null;
+    var h = parseInt(m[1], 10), min = m[2] || '00';
+    if (m[3] === 'pm' && h < 12) h += 12;
+    if (m[3] === 'am' && h === 12) h = 0;
+    if (h > 23 || parseInt(min, 10) > 59) return null;
+    return (h < 10 ? '0' : '') + h + ':' + min;
+  }
   $('create-week').onclick = async function(){
     try {
       var date = $('w-date').value;
       var kick = $('w-kick').value || '13:30';
       if (!date) return out('create-out', 'Pick the match day date first.', false);
       var lines = $('w-fixtures').value.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+      var badLine = null, vagueLine = null;
       var fixtures = lines.map(function(l){
         var p = l.split('|').map(function(s){return s.trim();});
+        if (p.length < 3 && !badLine) badLine = l;
+        var t = p[3] ? normTime(p[3]) : kick;
+        if (!t && !badLine) badLine = l;
+        // "5:30" reads as 5:30 AM — almost never what a football fixture means.
+        if (t && p[3] && !/am|pm/i.test(p[3]) && parseInt(t.slice(0, 2), 10) < 10 && !vagueLine) vagueLine = l;
         return { league:p[0], home:p[1], away:p[2],
-                 kickoff_at: date + 'T' + (p[3]||kick) + ':00+01:00',
+                 kickoff_at: date + 'T' + t + ':00+01:00',
                  external_id: p[4] || null };
       });
+      if (badLine) return out('create-out', 'Could not read this line (check the | separators and the time):\n' + badLine + '\nFormat: League | Home | Away | time | match_id(optional) — time like 13:30 or 1:30pm.', false);
+      if (vagueLine) return out('create-out', 'Is this kickoff morning or evening?\n' + vagueLine + '\nWrite it as e.g. 5:30pm (or 17:30) so there is no doubt.', false);
       var data = await call('create_week', {
         saturday: date,
         picks_cutoff: date + 'T' + kick + ':00+01:00',

@@ -32,6 +32,29 @@ exports.handler = async (event) => {
       }
 
       case 'create_week': {
+        // Friendly duplicate check — a week for this date may be left over from
+        // an earlier failed attempt, or already created by someone else.
+        const { data: existing } = await client.from('weeks')
+          .select('id, state').eq('saturday', body.saturday).maybeSingle();
+        if (existing) {
+          return json(409, {
+            error: 'week_exists',
+            message: 'A match day for ' + body.saturday + ' already exists (id ' + existing.id +
+              ', state "' + existing.state + '"). If it is a leftover from a failed attempt, ' +
+              'delete it in Supabase first — in this order: winners, entries, codes, fixtures, weeks — then create it again here.'
+          });
+        }
+        // Validate fixtures BEFORE touching the database, so a bad line can
+        // never leave a half-created week behind.
+        const fixtures = Array.isArray(body.fixtures) ? body.fixtures : [];
+        for (const f of fixtures) {
+          if (!f.league || !f.home || !f.away) {
+            return json(400, { error: 'bad_fixture', message: 'Missing league/home/away on: ' + JSON.stringify(f) });
+          }
+          if (!f.kickoff_at || isNaN(Date.parse(f.kickoff_at))) {
+            return json(400, { error: 'bad_fixture', message: 'Unreadable kickoff time for ' + f.home + ' v ' + f.away + ' — got "' + f.kickoff_at + '". Use 13:30 or 1:30pm in the time column.' });
+          }
+        }
         const { data: week, error } = await client.from('weeks').insert({
           saturday: body.saturday,
           state: 'teaser',
@@ -41,10 +64,14 @@ exports.handler = async (event) => {
           min_entries: body.min_entries || 25
         }).select().single();
         if (error) throw error;
-        if (Array.isArray(body.fixtures) && body.fixtures.length) {
-          const rows = body.fixtures.map((f, i) => ({ ...f, week_id: week.id, sort: i }));
+        if (fixtures.length) {
+          const rows = fixtures.map((f, i) => ({ ...f, week_id: week.id, sort: i }));
           const { error: e2 } = await client.from('fixtures').insert(rows);
-          if (e2) throw e2;
+          if (e2) {
+            // Roll back the week so a retry starts clean instead of hitting a duplicate.
+            await client.from('weeks').delete().eq('id', week.id);
+            return json(400, { error: 'fixtures_failed', message: 'Fixtures could not be saved (' + e2.message + '). Nothing was created — fix the fixture lines and try again.' });
+          }
         }
         return json(200, { ok: true, week_id: week.id });
       }

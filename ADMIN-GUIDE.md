@@ -30,6 +30,10 @@ automatically so the leaderboard scores itself. Fixtures in, results out.
    Premier League | Chelsea | Wolves  | 16:00 | 537215
    ```
 
+   The time works in either format — `13:30` or `1:30pm` both do the same thing
+   (`7pm` on its own works too). If a time can't be read, the admin tells you which
+   line to fix before anything is created.
+
    The last number is the football-data **match ID** — optional, but it's what makes
    results automatic. No ID = you'll type that result in by hand on the night.
    (How to find IDs is at the bottom of this guide.)
@@ -55,6 +59,7 @@ Cut-offs are set for you: numbers close 6:30pm, draw 7:00pm, minimum entries 25.
 
 ## When something goes wrong
 
+- **"A match day for this date already exists"** — either it's genuinely created (check §1), or it's a leftover from an earlier failed attempt. Delete it in Supabase in this order — winners, entries, codes, fixtures, weeks — then create it again. The admin now refuses to half-create weeks, so this should only ever come from history.
 - **✗ key rejected** — wrong admin key, or ADMIN_KEY missing in Netlify. Nothing else will work until Unlock shows ✓.
 - **"Code not found" at the till** — that code was never issued for *this* match day. Check §1, reissue in §3.
 - **Customer lost their slip** — §4, look them up by phone number.
