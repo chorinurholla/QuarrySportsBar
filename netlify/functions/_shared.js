@@ -48,8 +48,10 @@ async function currentWeek(client) {
 }
 
 function makeReference() {
-  // Short, phonetic-friendly: QRY + 4 digits (collision-checked by unique constraint + retry)
-  return 'QRY-' + String(Math.floor(1000 + Math.random() * 9000));
+  // Short, phonetic-friendly: REF + 4 digits (collision-checked by unique constraint + retry).
+  // Deliberately NOT the QRY- prefix used by entry codes, so a slip reference can
+  // never be mistaken for a playable code at the till.
+  return 'REF-' + String(Math.floor(1000 + Math.random() * 9000));
 }
 
 module.exports = { db, json, requireAdmin, currentWeek, makeReference };

@@ -30,6 +30,8 @@ create table if not exists fixtures (
   away        text not null,
   kickoff_at  timestamptz not null,
   result      char(1) check (result in ('H','D','A','V')),  -- V = void (postponed/abandoned)
+  home_goals  int,                               -- final score, used for the total-goals tie-break
+  away_goals  int,
   sort        int not null default 0
 );
 create index if not exists fixtures_week on fixtures(week_id);

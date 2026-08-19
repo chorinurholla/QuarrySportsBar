@@ -55,7 +55,30 @@ Cut-offs are set for you: numbers close 6:30pm, draw 7:00pm, minimum entries 25.
 | 7:00pm | **§6 → Reveal draw.** The bingo show plays on the big screen; the output box names the winner(s) and the winning ball. |
 | After the draw | **§7 Record winner** — kind **Bingo**, amount **20000**, tick consent if they're happy to be photographed. Pay at the bar. |
 | As matches finish | Results appear on the leaderboard by themselves within ~2 minutes of full time. If one hasn't after 10 minutes, set it by hand in **§5** (get fixture IDs from **§1 Load current week**). Postponed match → **Void**. |
-| After the last final whistle | The leaderboard settles itself — highest score wins. **§7 Record winner** — kind **Match Picks**, amount **50000**. Pay the same night. |
+| After the last final whistle | The leaderboard flips from LIVE to **FINAL** and names the winner itself — top picks, tie-break already applied. **§7 Record winner** — kind **Match Picks**, amount **50000**. Pay the same night. |
+
+## Who won? The system decides — never a claim
+
+Once every match has a result, the leaderboard on the Play page switches to
+**FINAL** and prints a black banner naming the winner (e.g. *"FINAL — winner:
+Sola ··291 with 9 correct"*), with the total-goals tie-break already applied.
+
+**Never pay on a claim.** If someone says they won, check the FINAL banner and
+match the last 3 digits of their **REF** number (on their slip) plus their ID.
+It doesn't matter who arrives first or loudest — the winner is whoever the
+system names, and it names the same person no matter when you look. A "better
+claim" arriving hours later changes nothing, because the payout was checked
+against the system, not against a story.
+
+If a result was set without goals (feed hiccup, or §5 by hand without the
+score), the tie-break can't split an exact tie — the prize is shared equally,
+which is what the published rules say. So when using §5, always enter the
+goals too.
+
+**Claim window:** winners have **14 days** to claim with their REF and ID —
+that's what the published rules promise, so don't shorten it on the night.
+Announce the winner from the FINAL banner before close even if they've gone
+home ("Sola ··291 — come claim with your slip"), and the money simply waits.
 
 ## When something goes wrong
 

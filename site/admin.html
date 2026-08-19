@@ -85,12 +85,14 @@
 
     <section>
       <h2><em>5</em>Results fallback</h2>
-      <p class="note">Results normally arrive automatically every 2 minutes. Use this only if the feed fails, or to void a postponed match.</p>
+      <p class="note">Results normally arrive automatically every 2 minutes. Use this only if the feed fails, or to void a postponed match. Enter the goals too — they power the total-goals tie-break; without them an exact tie is shared.</p>
       <div class="row">
         <div><label for="r-fixture">Fixture ID</label><input id="r-fixture" type="number"></div>
         <div><label for="r-result">Result</label>
           <select id="r-result"><option value="H">Home</option><option value="D">Draw</option><option value="A">Away</option><option value="V">Void</option></select>
         </div>
+        <div><label for="r-hg">Home goals</label><input id="r-hg" type="number" min="0" max="20"></div>
+        <div><label for="r-ag">Away goals</label><input id="r-ag" type="number" min="0" max="20"></div>
         <button id="set-result">Set</button>
       </div>
       <div class="out" id="result-out">–</div>
@@ -221,7 +223,12 @@
     catch(e){ out('lookup-out', e, false); }
   };
   $('set-result').onclick = async function(){
-    try { out('result-out', await call('set_result', { fixture_id: Number($('r-fixture').value), result: $('r-result').value }), true); }
+    try {
+      var payload = { fixture_id: Number($('r-fixture').value), result: $('r-result').value };
+      if ($('r-hg').value !== '') payload.home_goals = Number($('r-hg').value);
+      if ($('r-ag').value !== '') payload.away_goals = Number($('r-ag').value);
+      out('result-out', await call('set_result', payload), true);
+    }
     catch(e){ out('result-out', e, false); }
   };
   $('commit').onclick = async function(){

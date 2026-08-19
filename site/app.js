@@ -357,7 +357,7 @@
       });
       return;
     }
-    var reference = 'QRY-DEMO';
+    var reference = 'REF-DEMO';
     if (API) {
       railSubmit.disabled = true;
       railSubmit.textContent = 'Submitting…';
@@ -405,6 +405,8 @@
     var pickLines = fixtures.map(function (f) {
       return f.home + ' vs ' + f.away + ' — ' + (PICK_WORD[picks[f.id]] || '–');
     });
+    var tbVal = (document.getElementById('tiebreak') || {}).value;
+    if (tbVal !== '' && tbVal != null) pickLines.push('Tie-break (total goals) — ' + tbVal);
     var picksBox = document.getElementById('readback-picks');
     if (picksBox) {
       picksBox.innerHTML = '';
@@ -469,8 +471,21 @@
       var box = document.getElementById('board-rows');
       var badge = document.getElementById('board-badge');
       if (box && data && data.rows) {
-        if (badge) badge.textContent = 'LIVE';
+        if (badge) badge.textContent = data.final ? 'FINAL' : 'LIVE';
         box.innerHTML = '';
+        /* All matches decided → the system names the winner. Claims are checked
+           against this, never the other way round. */
+        if (data.final && data.final.winners && data.final.winners.length) {
+          var fin = document.createElement('div');
+          fin.className = 'lrow';
+          fin.style.cssText = 'background:var(--ink,#141414);color:#F3F3F3;font-weight:700;padding:12px;display:block';
+          var names = data.final.winners.map(function (w) { return w.display; }).join(', ');
+          fin.textContent = (data.final.shared ? 'FINAL — winners (shared): ' : 'FINAL — winner: ')
+            + names + ' with ' + data.final.correct + ' correct'
+            + (data.final.tiebreakUsed ? ' (won on the total-goals tie-break — ' + data.final.totalGoals + ' goals)' : '')
+            + '. Claim at the bar with your REF number and ID.';
+          box.appendChild(fin);
+        }
         if (!data.rows.length) {
           var p = document.createElement('p');
           p.className = 'muted small';

@@ -103,7 +103,11 @@ exports.handler = async (event) => {
 
       case 'set_result': {
         if (!['H', 'D', 'A', 'V'].includes(body.result)) return json(400, { error: 'bad_result' });
-        const { error } = await client.from('fixtures').update({ result: body.result }).eq('id', body.fixture_id);
+        const patch = { result: body.result };
+        // Optional goals — keep the total-goals tie-break automatic even on manual entry.
+        if (Number.isInteger(Number(body.home_goals)) && body.home_goals !== '' && body.home_goals != null) patch.home_goals = Number(body.home_goals);
+        if (Number.isInteger(Number(body.away_goals)) && body.away_goals !== '' && body.away_goals != null) patch.away_goals = Number(body.away_goals);
+        const { error } = await client.from('fixtures').update(patch).eq('id', body.fixture_id);
         if (error) throw error;
         return json(200, { ok: true });
       }

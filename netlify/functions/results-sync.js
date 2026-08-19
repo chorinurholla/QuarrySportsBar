@@ -32,7 +32,12 @@ exports.handler = async () => {
       if (!fx || fx.result) continue;
       const w = m.score && m.score.winner;
       const result = w === 'HOME_TEAM' ? 'H' : w === 'AWAY_TEAM' ? 'A' : 'D';
-      const { error } = await client.from('fixtures').update({ result }).eq('id', fx.id);
+      const ft = (m.score && m.score.fullTime) || {};
+      const { error } = await client.from('fixtures').update({
+        result,
+        home_goals: Number.isInteger(ft.home) ? ft.home : null,
+        away_goals: Number.isInteger(ft.away) ? ft.away : null
+      }).eq('id', fx.id);
       if (!error) updated++;
     }
     return json(200, { ok: true, updated });
