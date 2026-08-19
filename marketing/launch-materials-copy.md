@@ -43,6 +43,7 @@ Footer: One code per customer per Saturday · Codes valid today only · Picks cl
 - "My code no work." → Check the digits carefully. Still failing? Bring it to the bar.
 - "I lost my slip/receipt." → No wahala — the bar can look up your entry with your phone number.
 - "When do I have to enter?" → Match picks close at first kickoff. Lucky numbers close 6:30pm. Draw 7:00pm on the big screen.
+- "How di draw take work?" → From 7:00pm we draw numbers one at a time on the big screen. First slip to complete all 7 of their numbers wins ₦20,000 bar & kitchen credit. Somebody wins every match day.
 - "How do I collect if I win?" → Same night at the bar, or within 14 days with your code and ID.
 - If you're not sure — ask the manager, don't guess. 18+ only.
 
@@ -53,4 +54,3 @@ Footer: One code per customer per Saturday · Codes valid today only · Picks cl
 - Table tent: A5 (148×210mm) on thick card (300gsm), one per table. (Fold-tent version: print two copies back-to-back or ask the printer to impose as a tent.)
 - Waiter card: A6 (105×148mm) double-sided on card, laminated if possible — one per staff member.
 - All PDFs are print-ready with the brand colours (Deep Amber #FFB300 / ink #141414 / off-white #F3F3F3). Ask the printer to print as-is, no colour "corrections".
-- ⚠️ Legal note: get the lawyer's nod on the poster/tent wording at the same time as the site rules — it's the same claims in print.
